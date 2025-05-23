@@ -6,4 +6,12 @@ annotated-types==0.7.0
 pydantic-mongo==3.1.0
 pydantic_core==2.33.2
 pymongo==4.12.1
+bcrypt==4.3.0
+cryptography==45.0.2
+python-jose==3.4.0
+python-multipart==0.0.20
+passlib==1.7.4
+psycopg2-binary==2.9.10
+referencing==0.36.2
+python-dotenv
 

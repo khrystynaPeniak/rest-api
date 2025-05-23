@@ -1,12 +1,19 @@
-# CREATE BOOK 
- ![alt text](screenshots/create_book.png)
+# Register
 
-# GET ALL BOOKS
- ![alt text](screenshots/get_all_books.png)
+![alt text](screenshots/create_user.png)
 
-# GET BOOK BY ID
- ![alt text](screenshots/book_by_id.png)
+# Login
 
-# DELETE BOOK
- ![alt text](screenshots/delete_book.png)
+![alt text](screenshots/login.png)
 
+# Refresh token
+
+![alt text](screenshots/refresh_token.png)
+
+# Unauthorized
+
+![alt text](screenshots/401.png)
+
+# Authorized
+
+![alt text](screenshots/authorize.png)
