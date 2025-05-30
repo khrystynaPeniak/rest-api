@@ -1,0 +1,274 @@
+openapi: "3.0.3"
+info:
+  title: "Library API"
+  description: "API for managing books in a library"
+  version: "1.0.0"
+  contact:
+    name: "Library API Support"
+    email: "support@library.com"
+
+servers:
+  - url: "http://localhost:4010"
+    description: "Mock server"
+  - url: "http://localhost:8081"
+    description: "Development server"
+
+paths:
+  "/v1/api/":
+    get:
+      summary: "Get main page message"
+      operationId: "getIndex"
+      responses:
+        "200":
+          description: "Main page message"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Main paige!"
+              examples:
+                main_response:
+                  summary: "Main page response"
+                  value:
+                    message: "Main paige!"
+
+  "/v1/api/books":
+    get:
+      summary: "Get list of books with pagination"
+      operationId: "getBooks"
+      parameters:
+        - name: "limit"
+          in: "query"
+          description: "Number of books to return"
+          required: false
+          schema:
+            type: "integer"
+            default: 3
+            minimum: 1
+            maximum: 100
+        - name: "offset"
+          in: "query"
+          description: "Number of books to skip"
+          required: false
+          schema:
+            type: "integer"
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: "List of books with pagination info"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  next_url:
+                    type: "string"
+                    nullable: true
+                    example: "http://localhost:4010/v1/api/books?limit=3&offset=3"
+                  previous_url:
+                    type: "string"
+                    nullable: true
+                    example: "http://localhost:4010/v1/api/books?limit=3&offset=0"
+                  total_books:
+                    type: "integer"
+                    example: 10
+                  books:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Book"
+              examples:
+                books_list:
+                  summary: "Example books list"
+                  value:
+                    next_url: "http://localhost:4010/v1/api/books?limit=3&offset=3"
+                    previous_url: null
+                    total_books: 5
+                    books:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        title: "The Great Gatsby"
+                        author: "F. Scott Fitzgerald"
+                        year: 1925
+                      - id: "550e8400-e29b-41d4-a716-446655440001"
+                        title: "To Kill a Mockingbird"
+                        author: "Harper Lee"
+                        year: 1960
+
+    post:
+      summary: "Create a new book"
+      operationId: "createBook"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookInput"
+            examples:
+              new_book:
+                summary: "Example new book"
+                value:
+                  title: "The Catcher in the Rye"
+                  author: "J.D. Salinger"
+                  year: 1951
+      responses:
+        "201":
+          description: "Book created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+              examples:
+                created_book:
+                  summary: "Created book response"
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440003"
+                    title: "The Catcher in the Rye"
+                    author: "J.D. Salinger"
+                    year: 1951
+        "422":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  errors:
+                    type: "object"
+                    additionalProperties:
+                      type: "array"
+                      items:
+                        type: "string"
+              examples:
+                validation_error:
+                  summary: "Validation error example"
+                  value:
+                    errors:
+                      title: [ "Field may not be blank." ]
+                      year: [ "Must be greater than or equal to 1500." ]
+
+  "/v1/api/books/{book_id}":
+    get:
+      summary: "Get a specific book by ID"
+      operationId: "getBook"
+      parameters:
+        - name: "book_id"
+          in: "path"
+          required: true
+          description: "The ID of the book to retrieve"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Book details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+              examples:
+                single_book:
+                  summary: "Single book response"
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    title: "The Great Gatsby"
+                    author: "F. Scott Fitzgerald"
+                    year: 1925
+        "404":
+          description: "Book not found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Book not found"
+
+    delete:
+      summary: "Delete a specific book"
+      operationId: "deleteBook"
+      parameters:
+        - name: "book_id"
+          in: "path"
+          required: true
+          description: "The ID of the book to delete"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "Book deleted successfully"
+        "404":
+          description: "Book not found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Book not found"
+
+components:
+  schemas:
+    Book:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          readOnly: true
+          description: "Unique identifier for the book"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: "string"
+          minLength: 1
+          maxLength: 100
+          description: "Title of the book"
+          example: "The Great Gatsby"
+        author:
+          type: "string"
+          minLength: 1
+          maxLength: 100
+          description: "Author of the book"
+          example: "F. Scott Fitzgerald"
+        year:
+          type: "integer"
+          minimum: 1500
+          maximum: 2025
+          description: "Publication year of the book"
+          example: 1925
+      required:
+        - "id"
+        - "title"
+        - "author"
+        - "year"
+
+    BookInput:
+      type: "object"
+      properties:
+        title:
+          type: "string"
+          minLength: 1
+          maxLength: 100
+          description: "Title of the book"
+          example: "The Great Gatsby"
+        author:
+          type: "string"
+          minLength: 1
+          maxLength: 100
+          description: "Author of the book"
+          example: "F. Scott Fitzgerald"
+        year:
+          type: "integer"
+          minimum: 1500
+          maximum: 2025
+          description: "Publication year of the book"
+          example: 1925
+      required:
+        - "title"
+        - "author"
+        - "year"
