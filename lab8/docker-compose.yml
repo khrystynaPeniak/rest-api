@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  book_api:
+    build: .
+    container_name: book_library_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=mysql_db
+      - DB_PORT=3306
+      - DB_NAME=book_library
+      - DB_USER=library_user
+      - DB_PASSWORD=secure_password_123
+      - JWT_SECRET=your_super_secret_jwt_key_here
+      - REFRESH_SECRET=your_super_secret_refresh_key_here
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - book_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        while ! nc -z mysql_db 3306; do
+          echo 'Waiting for MySQL...'
+          sleep 1
+        done
+        echo 'MySQL is ready!'
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  mysql_db:
+    image: mysql:8.0
+    container_name: book_mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_123
+      MYSQL_DATABASE: book_library
+      MYSQL_USER: library_user
+      MYSQL_PASSWORD: secure_password_123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - book_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_123" ]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: book_phpmyadmin
+    environment:
+      PMA_HOST: mysql_db
+      PMA_PORT: 3306
+      PMA_USER: library_user
+      PMA_PASSWORD: secure_password_123
+      PMA_ARBITRARY: 1
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql_db
+    networks:
+      - book_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  book_network:
+    driver: bridge
